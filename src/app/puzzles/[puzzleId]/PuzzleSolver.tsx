@@ -173,6 +173,7 @@ export default function PuzzleSolver({ puzzle, isDaily }: Props) {
           return (
             <button
               key={origIdx}
+              data-testid="puzzle-candidate"
               onClick={() => !revealed && handlePick(displayIdx)}
               disabled={revealed}
               style={{
