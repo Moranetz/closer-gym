@@ -1,0 +1,532 @@
+@import "tailwindcss";
+
+/*
+ * closer-gym design tokens — chess.com play surface, ported to sales training.
+ * Sourced from: research agent spec against chess.com/play/computer + lichess-org/lila ui/round/css.
+ * Tune (approx) values against a side-by-side screenshot once v0 is rendering.
+ */
+
+:root {
+  /* Brand greens (chess.com signature) */
+  --brand-green-600: #81B64C;          /* primary CTA, brilliant-move */
+  --brand-green-700: #769656;          /* legacy dark squares */
+  --brand-green-current: #739552;      /* current dark squares */
+  --brand-green-hover: #9CC868;
+
+  /* Board / "conversation surface" — kept for the optional 8x8 metaphor flourish */
+  --square-light: #EBECD0;
+  --square-dark:  #739552;
+  --last-move:    rgba(247, 247, 105, 0.55);
+  --check-red:    rgba(255, 0, 0, 0.85);
+
+  /* Surfaces — dark mode default */
+  --bg-page:    #262421;
+  --bg-panel:   #312E2B;
+  --bg-rail:    #272522;
+  --bg-banner:  #21201D;
+  --bg-hover:   rgba(255, 255, 255, 0.06);
+  --border:     #1B1A19;
+  --border-strong: #3D3A37;
+
+  /* Text */
+  --text-primary:    #FFFFFF;
+  --text-secondary:  #C9C8C5;
+  --text-muted:      #9B9893;
+  --text-faint:      #6F6D6A;
+
+  /* Semantic */
+  --danger:     #A4262C;   /* resign, blunder, low-time */
+  --warning:    #E5A50A;   /* mistake, draw offer */
+  --info:       #3692E7;   /* current-move highlight, links */
+  --brilliant:  #1BAAA6;   /* !! glyph */
+
+  /* Title-badge palette (color-codes ELO tiers) */
+  --badge-gm:   #AB6B2E;   /* bronze — Grandmaster Closer */
+  --badge-im:   #C9C8C5;   /* silver — International Master */
+  --badge-m:    #E5A50A;   /* gold — Master */
+  --badge-exp:  #81B64C;   /* green — Expert */
+  --badge-low:  #6F6D6A;   /* gray — Class C/D, Patzer */
+}
+
+@theme inline {
+  --color-background: var(--bg-page);
+  --color-foreground: var(--text-primary);
+  --color-bg-panel: var(--bg-panel);
+  --color-bg-rail: var(--bg-rail);
+  --color-bg-banner: var(--bg-banner);
+  --color-bg-hover: var(--bg-hover);
+  --color-border: var(--border);
+  --color-border-strong: var(--border-strong);
+  --color-text-primary: var(--text-primary);
+  --color-text-secondary: var(--text-secondary);
+  --color-text-muted: var(--text-muted);
+  --color-text-faint: var(--text-faint);
+  --color-brand: var(--brand-green-600);
+  --color-brand-hover: var(--brand-green-hover);
+  --color-danger: var(--danger);
+  --color-warning: var(--warning);
+  --color-info: var(--info);
+  --color-brilliant: var(--brilliant);
+  --font-sans: var(--font-montserrat);
+}
+
+html, body {
+  background: var(--bg-page);
+  color: var(--text-primary);
+}
+
+body {
+  font-family: var(--font-montserrat), -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+  font-feature-settings: "tnum" on;  /* tabular numerals — ELO, clocks, eval values */
+}
+
+::selection {
+  background: var(--brand-green-600);
+  color: var(--bg-page);
+}
+
+/* ─── Tabular numerals helper ─── */
+.tabular {
+  font-variant-numeric: tabular-nums;
+}
+
+/* ─── Top nav (56px) ─── */
+.topnav {
+  height: 56px;
+  background: var(--bg-rail);
+  border-bottom: 1px solid var(--border);
+  position: sticky;
+  top: 0;
+  z-index: 50;
+}
+.topnav-link {
+  display: inline-flex;
+  align-items: center;
+  height: 100%;
+  padding: 0 16px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  letter-spacing: 0.01em;
+  border-bottom: 2px solid transparent;
+}
+.topnav-link:hover {
+  color: var(--text-primary);
+  background: var(--bg-hover);
+}
+.topnav-link.active {
+  color: var(--text-primary);
+  border-bottom-color: var(--brand-green-600);
+}
+
+/* ─── Left sidebar (60px collapsed icon rail) ─── */
+.sidebar {
+  width: 60px;
+  background: var(--bg-rail);
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  padding: 8px 0;
+}
+.sidebar-item {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 48px;
+  color: var(--text-muted);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+}
+.sidebar-item:hover {
+  color: var(--text-primary);
+  background: var(--bg-hover);
+}
+.sidebar-item.active {
+  color: var(--brand-green-600);
+  background: var(--bg-hover);
+  position: relative;
+}
+.sidebar-item.active::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 8px;
+  bottom: 8px;
+  width: 3px;
+  background: var(--brand-green-600);
+}
+
+/* ─── Cards / panels ─── */
+.panel {
+  background: var(--bg-panel);
+  border-radius: 4px;
+  border: 1px solid var(--border);
+}
+.panel-rail {
+  background: var(--bg-rail);
+  border-radius: 4px;
+  border: 1px solid var(--border);
+}
+
+/* ─── Buttons ─── */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  height: 40px;
+  padding: 0 16px;
+  border-radius: 3px;
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: background 120ms, color 120ms, border-color 120ms;
+  font-family: inherit;
+}
+.btn-primary {
+  background: var(--brand-green-600);
+  color: var(--text-primary);
+}
+.btn-primary:hover { background: var(--brand-green-hover); }
+.btn-primary:disabled {
+  background: var(--border-strong);
+  color: var(--text-faint);
+  cursor: not-allowed;
+}
+.btn-secondary {
+  background: var(--bg-panel);
+  color: var(--text-secondary);
+  border-color: var(--border-strong);
+}
+.btn-secondary:hover {
+  background: var(--bg-hover);
+  color: var(--text-primary);
+}
+.btn-ghost {
+  background: transparent;
+  color: var(--text-muted);
+}
+.btn-ghost:hover {
+  color: var(--text-primary);
+  background: var(--bg-hover);
+}
+.btn-icon {
+  width: 40px;
+  height: 40px;
+  padding: 0;
+}
+.btn-lg {
+  height: 56px;
+  font-size: 15px;
+  padding: 0 24px;
+}
+.btn-danger {
+  background: var(--danger);
+  color: var(--text-primary);
+}
+
+/* ─── Eval bar (28px wide) ─── */
+.evalbar {
+  width: 28px;
+  background: #F0F0F0;             /* white half */
+  border-radius: 3px;
+  position: relative;
+  overflow: hidden;
+}
+.evalbar-fill {
+  background: #403D39;             /* black fill */
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  transition: height 0.35s cubic-bezier(.2,.7,.2,1);
+}
+.evalbar-label {
+  position: absolute;
+  font-size: 11px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.02em;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 0 2px;
+}
+.evalbar-label.white { color: #262421; bottom: 4px; }
+.evalbar-label.black { color: #F0F0F0; top: 4px; }
+
+/* ─── Player card (48px height) ─── */
+.player-card {
+  height: 48px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 8px;
+  background: var(--bg-rail);
+  border: 1px solid var(--border);
+  border-radius: 3px;
+}
+.player-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 4px;
+  background: var(--bg-panel);
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+.player-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+.player-rating {
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+}
+.player-clock {
+  margin-left: auto;
+  height: 32px;
+  min-width: 92px;
+  padding: 0 12px;
+  border-radius: 3px;
+  background: var(--border-strong);
+  color: var(--text-primary);
+  font-size: 18px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.player-clock.active {
+  background: var(--text-primary);
+  color: var(--bg-page);
+}
+.player-clock.low {
+  background: var(--danger);
+  color: var(--text-primary);
+}
+
+/* Title-badge pills (Patzer → Grandmaster Closer) */
+.title-badge {
+  display: inline-block;
+  padding: 2px 5px;
+  border-radius: 2px;
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--text-primary);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.title-badge.gm  { background: var(--badge-gm); }
+.title-badge.im  { background: var(--badge-im); color: var(--bg-page); }
+.title-badge.m   { background: var(--badge-m);  color: var(--bg-page); }
+.title-badge.exp { background: var(--badge-exp); color: var(--bg-page); }
+.title-badge.low { background: var(--badge-low); }
+
+/* ─── Move list ─── */
+.movelist {
+  background: var(--bg-rail);
+  overflow-y: auto;
+}
+.movelist-row {
+  display: grid;
+  grid-template-columns: 36px 1fr 1fr;
+  height: 28px;
+  align-items: center;
+  font-size: 14px;
+  font-weight: 600;
+}
+.movelist-num {
+  background: var(--bg-banner);
+  color: var(--text-muted);
+  font-size: 12px;
+  font-weight: 600;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding-right: 8px;
+}
+.movelist-cell {
+  padding: 0 8px;
+  color: var(--text-secondary);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  height: 100%;
+}
+.movelist-cell:hover { background: var(--bg-hover); }
+.movelist-cell.current {
+  background: rgba(54, 146, 231, 0.25);
+  color: var(--text-primary);
+  font-weight: 700;
+}
+
+/* Blunder markers */
+.move-glyph {
+  display: inline-block;
+  font-size: 12px;
+  font-weight: 700;
+  margin-left: 2px;
+}
+.move-glyph.brilliant   { color: var(--brilliant); }
+.move-glyph.good        { color: var(--brand-green-600); }
+.move-glyph.inaccuracy  { color: var(--warning); }
+.move-glyph.mistake     { color: #E78423; }
+.move-glyph.blunder     { color: var(--danger); }
+
+/* Opening name banner */
+.opening-banner {
+  height: 32px;
+  background: var(--bg-banner);
+  border-bottom: 1px solid var(--border);
+  padding: 0 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+.opening-banner .eco {
+  color: var(--text-muted);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+/* ─── Conversation as board — chat bubbles inside the board column ─── */
+.bubble {
+  border-radius: 6px;
+  padding: 10px 14px;
+  max-width: 78%;
+  font-size: 14px;
+  line-height: 1.45;
+  word-wrap: break-word;
+  white-space: pre-wrap;
+}
+.bubble-operator {
+  background: rgba(129, 182, 76, 0.14);
+  border: 1px solid rgba(129, 182, 76, 0.32);
+  color: var(--text-primary);
+  align-self: flex-end;
+}
+.bubble-persona {
+  background: var(--bg-panel);
+  border: 1px solid var(--border-strong);
+  color: var(--text-secondary);
+  align-self: flex-start;
+}
+.bubble-meta {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin-bottom: 4px;
+}
+.bubble-techtags {
+  margin-top: 6px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+.bubble-techtag {
+  font-size: 10px;
+  font-weight: 600;
+  padding: 1px 5px;
+  border-radius: 2px;
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--text-muted);
+  letter-spacing: 0.02em;
+}
+
+/* Eval delta indicator next to a move */
+.eval-delta {
+  display: inline-block;
+  padding: 1px 5px;
+  border-radius: 2px;
+  font-size: 11px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  margin-left: 6px;
+}
+.eval-delta.pos { background: rgba(129, 182, 76, 0.20); color: var(--brand-green-600); }
+.eval-delta.neg { background: rgba(164, 38, 44, 0.20); color: var(--danger); }
+.eval-delta.neu { background: rgba(255, 255, 255, 0.06); color: var(--text-muted); }
+
+/* ─── Inputs ─── */
+input[type="text"], input[type="email"], textarea, select {
+  background: var(--bg-page);
+  border: 1px solid var(--border-strong);
+  color: var(--text-primary);
+  font-family: inherit;
+  border-radius: 3px;
+  padding: 10px 12px;
+  font-size: 14px;
+}
+input:focus, textarea:focus, select:focus {
+  outline: none;
+  border-color: var(--brand-green-600);
+}
+
+/* ─── Persona / bot card on the picker ─── */
+.bot-card {
+  background: var(--bg-panel);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  cursor: pointer;
+  transition: border-color 120ms, transform 120ms;
+}
+.bot-card:hover {
+  border-color: var(--brand-green-600);
+  transform: translateY(-1px);
+}
+.bot-card.locked {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+.bot-card.locked:hover {
+  border-color: var(--border);
+  transform: none;
+}
+
+/* ─── Hero / home tiles ─── */
+.tile-hero {
+  background: linear-gradient(135deg, var(--bg-panel) 0%, var(--bg-rail) 100%);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 24px;
+}
+.tile {
+  background: var(--bg-panel);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 16px;
+}
+
+/* ─── Scrollbar — keep slim, dark, chess.com-feeling ─── */
+.scroll-slim::-webkit-scrollbar { width: 8px; height: 8px; }
+.scroll-slim::-webkit-scrollbar-track { background: transparent; }
+.scroll-slim::-webkit-scrollbar-thumb {
+  background: var(--border-strong);
+  border-radius: 4px;
+}
+.scroll-slim::-webkit-scrollbar-thumb:hover { background: var(--text-faint); }
+
+/* ─── Util ─── */
+.elide { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
