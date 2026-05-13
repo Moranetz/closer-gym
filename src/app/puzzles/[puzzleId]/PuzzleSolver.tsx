@@ -8,6 +8,8 @@ import { recordSolve, todayKey } from "@/lib/puzzle-storage";
 import { PUZZLES } from "@/lib/puzzle-library";
 import { classifyMove, titleForRating } from "@/lib/tokens";
 import { getTechnique } from "@/lib/techniques";
+import { getTranscript } from "@/lib/transcripts";
+import TranscriptSheet from "./TranscriptSheet";
 
 interface Props {
   puzzle: Puzzle;
@@ -35,7 +37,9 @@ export default function PuzzleSolver({ puzzle, isDaily }: Props) {
   const [revealed, setRevealed] = useState(false);
   const [secondsLeft, setSecondsLeft] = useState(TIMER_SEC);
   const [ratingChange, setRatingChange] = useState<{ delta: number; newRating: number; newStreak: number } | null>(null);
+  const [transcriptOpen, setTranscriptOpen] = useState(false);
   const startedAt = useRef(Date.now());
+  const transcript = puzzle.transcriptId ? getTranscript(puzzle.transcriptId) : undefined;
 
   // Timer
   useEffect(() => {
@@ -287,11 +291,28 @@ export default function PuzzleSolver({ puzzle, isDaily }: Props) {
             <Link href={`/puzzles/${nextPuzzleId}`} className="btn btn-primary">
               Next puzzle →
             </Link>
+            {transcript && (
+              <button
+                onClick={() => setTranscriptOpen(true)}
+                className="btn btn-secondary"
+              >
+                Read full transcript
+              </button>
+            )}
             <Link href="/puzzles" className="btn btn-secondary">
               All puzzles
             </Link>
           </div>
+          {transcript && (
+            <p style={{ fontSize: 11, color: "var(--text-faint)", marginTop: 12, lineHeight: 1.55 }}>
+              See this move type play out in <strong style={{ color: "var(--text-muted)" }}>{transcript.speaker}: {transcript.title}</strong>.
+            </p>
+          )}
         </div>
+      )}
+
+      {transcriptOpen && transcript && (
+        <TranscriptSheet transcript={transcript} onClose={() => setTranscriptOpen(false)} />
       )}
     </div>
   );

@@ -30,7 +30,8 @@ export interface Puzzle {
   buyerLine: string;     // exact quote from buyer
   candidates: PuzzleCandidate[];   // exactly 4, shuffled at display time
   bestIndex: number;     // 0-3, the eval-maximizing candidate (canonical index pre-shuffle)
-  themeHint?: string;    // optional hint shown post-solve, "this is a classic procurement-anchor"
+  themeHint?: string;    // optional hint shown post-solve
+  transcriptId?: string; // ID into TRANSCRIPTS — surfaces a "Read Full Transcript" sheet on solve
 }
 
 // Helpers
