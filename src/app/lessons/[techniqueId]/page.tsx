@@ -89,6 +89,23 @@ export default async function LessonDetail({ params }: Params) {
         </p>
       </div>
 
+      {/* Drill this technique CTA */}
+      {relatedPuzzles.length > 0 && (
+        <Link
+          href={`/puzzles/${relatedPuzzles[0].id}`}
+          className="btn btn-primary"
+          style={{ width: "100%", justifyContent: "flex-start", gap: 12, padding: "14px 18px", marginBottom: 24, textDecoration: "none" }}
+        >
+          <span style={{ fontSize: 16 }}>▶</span>
+          <span>
+            <span style={{ display: "block", fontSize: 14, fontWeight: 700 }}>Drill this technique now</span>
+            <span style={{ display: "block", fontSize: 11, fontWeight: 500, opacity: 0.8, marginTop: 2 }} className="tabular">
+              {relatedPuzzles[0].id.toUpperCase()} · ELO {relatedPuzzles[0].difficulty}
+            </span>
+          </span>
+        </Link>
+      )}
+
       {/* Related puzzles */}
       {relatedPuzzles.length > 0 && (
         <section style={{ marginBottom: 24 }}>
