@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { getSession, getRatings, updateRating } from "@/lib/storage";
+import { getSession, getRatings, updateRating, saveSession } from "@/lib/storage";
 import { applyMatch, type GlickoState } from "@/lib/elo";
 import { titleForRating } from "@/lib/tokens";
 import { INITIAL_RD, INITIAL_VOLATILITY } from "@/lib/tokens";
@@ -54,8 +54,18 @@ export default function ReviewClient({
     const s = getSession(sessionId);
     setSession(s ?? null);
 
-    // Apply Glicko-2 rating change once on mount.
-    if (s?.scorecard && ratingDelta === null) {
+    if (!s?.scorecard) return;
+
+    // The rating change must be applied exactly once per game. If a previous
+    // mount already applied it, reuse the cached values — otherwise reloading or
+    // revisiting the review page would compound the Glicko update every time.
+    if (s.ratingApplied) {
+      setRatingDelta(s.ratingDelta ?? 0);
+      setNewRating(s.ratingAfter ?? null);
+      return;
+    }
+
+    if (ratingDelta === null) {
       const ratings = getRatings();
       const myState = ratings.game;
       // Score: composite > 6.0 = win (1), 4-6 = draw (0.5), < 4 = loss (0).
@@ -64,6 +74,7 @@ export default function ReviewClient({
       const oppState: GlickoState = { rating: botRating, rd: INITIAL_RD * 0.4, volatility: INITIAL_VOLATILITY };
       const { state, delta } = applyMatch(myState, oppState, score);
       updateRating("game", state);
+      saveSession({ ...s, ratingApplied: true, ratingDelta: delta, ratingAfter: state.rating });
       setRatingDelta(delta);
       setNewRating(state.rating);
     }

@@ -36,8 +36,19 @@ export function guard(req: Request, opts: GuardOpts = {}): NextResponse | null {
   }
 
   // 2. input-size caps — the cost ceiling.
-  if (Array.isArray(opts.turns) && opts.turns.length > MAX_TURNS) {
-    return NextResponse.json({ error: "Conversation too long" }, { status: 413 });
+  if (Array.isArray(opts.turns)) {
+    if (opts.turns.length > MAX_TURNS) {
+      return NextResponse.json({ error: "Conversation too long" }, { status: 413 });
+    }
+    // Cap each turn's text as well. The turn-count cap alone is no real ceiling:
+    // 60 turns × multi-MB each still forwards arbitrary volume to the org's API
+    // key. Each turn's text gets the same MAX_CHARS cap as a standalone field.
+    for (const t of opts.turns) {
+      const text = (t as { text?: unknown })?.text;
+      if (typeof text === "string" && text.length > MAX_CHARS) {
+        return NextResponse.json({ error: "Input too long" }, { status: 413 });
+      }
+    }
   }
   if (typeof opts.text === "string" && opts.text.length > MAX_CHARS) {
     return NextResponse.json({ error: "Input too long" }, { status: 413 });
@@ -46,6 +57,13 @@ export function guard(req: Request, opts: GuardOpts = {}): NextResponse | null {
   // 3. best-effort per-IP burst limit (per warm serverless instance).
   const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "unknown";
   const now = Date.now();
+  // Bound memory: evict expired entries so a stream of unique IPs can't grow the
+  // map without limit on a long-lived warm instance.
+  if (hits.size > 10_000) {
+    for (const [k, v] of hits) {
+      if (now - v.t > WINDOW_MS) hits.delete(k);
+    }
+  }
   const rec = hits.get(ip);
   if (!rec || now - rec.t > WINDOW_MS) {
     hits.set(ip, { n: 1, t: now });

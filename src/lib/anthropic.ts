@@ -220,16 +220,24 @@ Return ONLY valid JSON matching this shape (no markdown fences, no commentary):
   }
   const parsed = JSON.parse(raw.slice(jsonStart, jsonEnd + 1));
 
+  // Coerce + clamp the three score dimensions. The model usually returns 0-10
+  // integers, but if any field is missing/non-numeric the raw multiply yields
+  // NaN and poisons composite (→ "NaN" in the UI, wrong win/loss bucket).
+  const clampScore = (x: unknown): number => {
+    const n = Number(x);
+    return Number.isFinite(n) ? Math.max(0, Math.min(10, n)) : 0;
+  };
+  const deliveryCleanness = clampScore(parsed.deliveryCleanness);
+  const recognitionCorrectness = clampScore(parsed.recognitionCorrectness);
+  const personaResponseMatch = clampScore(parsed.personaResponseMatch);
+
   const composite =
-    (parsed.deliveryCleanness *
-      parsed.recognitionCorrectness *
-      parsed.personaResponseMatch) /
-    100;
+    (deliveryCleanness * recognitionCorrectness * personaResponseMatch) / 100;
 
   return {
-    deliveryCleanness: parsed.deliveryCleanness,
-    recognitionCorrectness: parsed.recognitionCorrectness,
-    personaResponseMatch: parsed.personaResponseMatch,
+    deliveryCleanness,
+    recognitionCorrectness,
+    personaResponseMatch,
     composite: Math.round(composite * 10) / 10,
     techniquesObservedDeployed: parsed.techniquesObservedDeployed ?? [],
     techniquesIntendedNotDeployed: parsed.techniquesIntendedNotDeployed ?? [],
