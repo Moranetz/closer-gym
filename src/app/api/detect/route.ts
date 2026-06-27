@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { detectTechniques } from "@/lib/detector";
 import type { SessionTurn } from "@/lib/types";
+import { guard } from "@/lib/guard";
 
 export const runtime = "nodejs";
 
@@ -10,6 +11,8 @@ export async function POST(req: Request) {
     const operatorText: string | undefined = body.operatorText;
     const recentContext: SessionTurn[] = body.recentContext ?? [];
     const deep: boolean = Boolean(body.deep);
+    const _g = guard(req, { turns: recentContext, text: operatorText });
+    if (_g) return _g;
 
     if (!operatorText) {
       return NextResponse.json(

@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { scoreSession } from "@/lib/anthropic";
 import { getPersona } from "@/lib/personas";
 import type { SessionTurn } from "@/lib/types";
+import { guard } from "@/lib/guard";
 
 export const runtime = "nodejs";
 // Scoring can take a few seconds.
@@ -13,6 +14,8 @@ export async function POST(req: Request) {
     const personaId: string | undefined = body.personaId;
     const intendedTechniques: string[] = body.intendedTechniques ?? [];
     const turns: SessionTurn[] = body.turns ?? [];
+    const _g = guard(req, { turns });
+    if (_g) return _g;
 
     if (!personaId) {
       return NextResponse.json(

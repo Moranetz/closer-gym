@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { personaTurn } from "@/lib/anthropic";
 import { getPersona } from "@/lib/personas";
 import type { SessionTurn } from "@/lib/types";
+import { guard } from "@/lib/guard";
 
 export const runtime = "nodejs";
 
@@ -11,6 +12,8 @@ export async function POST(req: Request) {
     const personaId: string | undefined = body.personaId;
     const conversationHistory: SessionTurn[] = body.conversationHistory ?? [];
     const operatorTurn: string | undefined = body.operatorTurn;
+    const _g = guard(req, { turns: conversationHistory, text: operatorTurn });
+    if (_g) return _g;
 
     if (!personaId || !operatorTurn) {
       return NextResponse.json(
