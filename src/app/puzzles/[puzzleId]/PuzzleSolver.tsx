@@ -34,6 +34,7 @@ export default function PuzzleSolver({ puzzle, isDaily }: Props) {
   }, [puzzle.id]);
 
   const [pickedDisplayIdx, setPickedDisplayIdx] = useState<number | null>(null);
+  const [didTimeOut, setDidTimeOut] = useState(false);
   const [revealed, setRevealed] = useState(false);
   const [secondsLeft, setSecondsLeft] = useState(TIMER_SEC);
   const [ratingChange, setRatingChange] = useState<{ delta: number; newRating: number; newStreak: number } | null>(null);
@@ -62,6 +63,7 @@ export default function PuzzleSolver({ puzzle, isDaily }: Props) {
   function handlePick(displayIdx: number, timedOut = false) {
     if (revealed) return;
     setPickedDisplayIdx(displayIdx);
+    setDidTimeOut(timedOut);
     const originalIdx = timedOut ? -1 : shuffledCandidates[displayIdx];
     const picked = originalIdx === -1 ? puzzle.candidates[puzzle.bestIndex] : puzzle.candidates[originalIdx];
     const timeRemaining = Math.max(0, Math.ceil((startedAt.current + TIMER_SEC * 1000 - Date.now()) / 1000));
@@ -86,8 +88,10 @@ export default function PuzzleSolver({ puzzle, isDaily }: Props) {
   const tier = difficultyTier(puzzle.difficulty);
   const themeColor = THEME_COLORS[puzzle.theme];
   const theme = THEME_LABELS[puzzle.theme];
-  const correct = pickedDisplayIdx !== null && shuffledCandidates[pickedDisplayIdx] === puzzle.bestIndex;
-  const timedOut = pickedDisplayIdx !== null && shuffledCandidates[pickedDisplayIdx] === -1;
+  // A timeout is recorded as a miss (pickedIndex -1), so it is never "correct"
+  // even though pickedDisplayIdx points at the best candidate for highlighting.
+  const timedOut = didTimeOut;
+  const correct = !timedOut && pickedDisplayIdx !== null && shuffledCandidates[pickedDisplayIdx] === puzzle.bestIndex;
   const nextPuzzleId = useMemo(() => {
     const i = PUZZLES.findIndex((p) => p.id === puzzle.id);
     const next = PUZZLES[(i + 1) % PUZZLES.length];

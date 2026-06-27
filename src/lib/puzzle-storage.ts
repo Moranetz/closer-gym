@@ -120,7 +120,9 @@ export function recordSolve(opts: {
 }
 
 function yesterdayKey(todayKey: string): string {
-  const d = new Date(todayKey + "T00:00:00");
+  // todayKey is a UTC calendar date (see todayKey()), so parse + decrement in UTC.
+  // Parsing without the "Z" would use local time and break streaks east of UTC.
+  const d = new Date(todayKey + "T00:00:00Z");
   d.setUTCDate(d.getUTCDate() - 1);
   return d.toISOString().slice(0, 10);
 }

@@ -100,6 +100,11 @@ export interface Session {
   startedAt: number;
   endedAt?: number;
   scorecard?: Scorecard;
+  // Set once the post-game Glicko rating change has been applied, so re-opening
+  // the review page never double-applies it. The applied values are cached for display.
+  ratingApplied?: boolean;
+  ratingDelta?: number;
+  ratingAfter?: number;
 }
 
 export interface Scorecard {
